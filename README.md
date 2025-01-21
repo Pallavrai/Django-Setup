@@ -10,6 +10,12 @@ In the root level of this repository, copy the file named `django.env.example` t
 cp django.env.example django.env
 ```
 
+Now generate secret key for your django.env file
+
+```
+python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+```
+
 Build code with docker compose
 ```
 docker-compose build
