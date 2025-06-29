@@ -16,13 +16,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV APP_ROOT=/app
 WORKDIR ${APP_ROOT}
 
-RUN pip install poetry
-RUN poetry config virtualenvs.create false
+# Install uv
+RUN pip install uv
 
-COPY pyproject.toml poetry.lock ./
-# Ensure psycopg2-binary is in your pyproject.toml
-# Add it using: poetry add psycopg2-binary
-RUN poetry install --no-interaction --no-root --no-cache
+COPY pyproject.toml uv.lock ./
+# Install dependencies using uv
+RUN uv sync --frozen --no-dev
 
 COPY . ${APP_ROOT}
 
