@@ -69,6 +69,8 @@ INSTALLED_APPS = [
     "django_filters",
     "corsheaders",
     "silk",  # Django Silk for profiling
+    
+    "core_commands",
   
 ]
 
