@@ -12,79 +12,127 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 import os
 from pathlib import Path
+from django.urls import reverse_lazy
+from django.templatetags.static import static
 from dotenv import load_dotenv
+import dj_database_url
 
 # Get the absolute path of the project directory
 # Load the django.env file
 
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(os.path.join(BASE_DIR, 'django.env'))
+load_dotenv(os.path.join(BASE_DIR, "django.env"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "")
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG') != 'False'
+DEBUG = os.getenv("DEBUG") != "False"
 
-ALLOWED_HOSTS = []
+# Read ALLOWED_HOSTS from environment variable
+allowed_hosts = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,0.0.0.0")
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts.split(",")]
 
+# CORS Settings from environment variables
+CORS_ALLOW_ALL_ORIGINS = True
+
+cors_origins = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000")
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(",")]
+
+CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS", "True").lower() == "true"
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "unfold",  # Custom app for admin interface
+    "unfold.contrib.filters",  # optional, if special filters are needed
+    "unfold.contrib.forms",  # optional, if special form elements are needed
+    "unfold.contrib.inlines",  # optional, if special inlines are needed
+    'import_export',
+    "unfold.contrib.import_export",  # optional, if django-import-export package is used
+    "unfold.contrib.guardian",  # optional, if django-guardian package is used
+    "unfold.contrib.simple_history",  # optional, if django-simple-history package is used
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "drf_spectacular",  # For OpenAPI schema generation
+    "django.contrib.gis",  # GeoDjango support
+    "django_filters",
+    "corsheaders",
+    "silk",  # Django Silk for profiling
+  
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "silk.middleware.SilkyMiddleware",
 ]
 
-ROOT_URLCONF = 'config.urls'
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Check if DATABASE_URL is provided (production environment)
+if os.getenv("DATABASE_URL"):
+    # Production: Use DATABASE_URL with dj-database-url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.getenv("DATABASE_URL"),
+            conn_max_age=600
+        )
+        
     }
-}
+    DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
+else:
+    # Development: Use individual environment variables
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.contrib.gis.db.backends.postgis",
+            "NAME": os.getenv("POSTGRES_DB"),
+            "USER": os.getenv("POSTGRES_USER"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+            "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+            "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        }
+    }
 
 
 # Password validation
@@ -92,16 +140,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -109,9 +157,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "Asia/Kolkata"
 
 USE_I18N = True
 
@@ -122,8 +170,335 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Media files (User uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Django REST Framework settings
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        # "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "THT API",
+    "DESCRIPTION": "API for the THT application that manages user accounts, dashboards, feedback, wallet transactions",
+    "VERSION": "2.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    # OTHER SETTINGS
+}
+
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+UNFOLD = {
+    
+    "DASHBOARD_CALLBACK": "user_accounts.views.dashboard_callback",
+
+    "SITE_TITLE": "THT Admin",
+    "SITE_HEADER": "THT Admin",
+    "SITE_SUBHEADER": "Manage your THT application",
+    "SITE_SYMBOL": "🎓",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "COLORS": {
+        "font": {
+            "subtle-color": "107 114 126",
+            "default-color": "75 85 99",
+            "important-color": "17 24 39",
+            "success-color": "22 163 74",
+            "info-color": "59 130 246",
+            "warning-color": "245 158 11",
+            "danger-color": "220 38 38",
+        },
+        "primary": {
+            "50": "255 247 237",   # Very light orange
+            "100": "255 237 213",  # Light orange
+            "200": "254 215 170",  # Lighter orange
+            "300": "253 186 116",  # Medium light orange
+            "400": "251 146 60",   # Medium orange
+            "500": "249 115 22",   # Base orange (similar to Get Started button)
+            "600": "234 88 12",    # Darker orange
+            "700": "194 65 12",    # Dark orange
+            "800": "154 52 18",    # Very dark orange
+            "900": "124 45 18",    # Darkest orange
+            "950": "67 20 7",      # Ultra dark orange
+        },
+        "secondary": {
+            "50": "250 245 255",   # Very light purple
+            "100": "243 232 255",  # Light purple
+            "200": "233 213 255",  # Lighter purple
+            "300": "216 180 254",  # Medium light purple
+            "400": "196 181 253",  # Medium purple
+            "500": "147 51 234",   # Base purple (similar to Explore text)
+            "600": "126 34 206",   # Darker purple
+            "700": "107 33 168",   # Dark purple
+            "800": "88 28 135",    # Very dark purple
+            "900": "74 29 120",    # Darkest purple
+            "950": "59 7 100",     # Ultra dark purple
+        },
+        "success": {
+            "50": "240 253 244",
+            "100": "220 252 231",
+            "200": "187 247 208",
+            "300": "134 239 172",
+            "400": "74 222 128",
+            "500": "34 197 94",
+            "600": "22 163 74",
+            "700": "21 128 61",
+            "800": "22 101 52",
+            "900": "20 83 45",
+            "950": "5 46 22",
+        },
+        "warning": {
+            "50": "255 251 235",
+            "100": "254 243 199",
+            "200": "253 230 138",
+            "300": "252 211 77",
+            "400": "251 191 36",
+            "500": "245 158 11",
+            "600": "217 119 6",
+            "700": "180 83 9",
+            "800": "146 64 14",
+            "900": "120 53 15",
+            "950": "69 26 3",
+        },
+        "danger": {
+            "50": "254 242 242",
+            "100": "254 226 226",
+            "200": "254 202 202",
+            "300": "252 165 165",
+            "400": "248 113 113",
+            "500": "239 68 68",
+            "600": "220 38 38",
+            "700": "185 28 28",
+            "800": "153 27 27",
+            "900": "127 29 29",
+            "950": "69 10 10",
+        },
+        "info": {
+            "50": "239 246 255",
+            "100": "219 234 254",
+            "200": "191 219 254",
+            "300": "147 197 253",
+            "400": "96 165 250",
+            "500": "59 130 246",
+            "600": "37 99 235",
+            "700": "29 78 216",
+            "800": "30 64 175",
+            "900": "30 58 138",
+            "950": "23 37 84",
+        },
+    },
+    "EXTENSIONS": {
+        "modeltranslation": {
+            "flags": {
+                "en": "🇺🇸",
+                "fr": "🇫🇷",
+                "nl": "🇳🇱",
+                "hi": "🇮🇳",
+            },
+        },
+    },
+    # "SIDEBAR": {
+    #     "show_search": True,
+    #     "show_all_applications": True,
+    #     "navigation": [
+    #         {
+    #             "title": "Dashboard",
+    #             "separator": True,
+    #             "items": [
+    #                 {
+    #                     "title": "Overview",
+    #                     "icon": "dashboard",
+    #                     "link": "/admin/",
+    #                 },
+    #             ],
+    #         },
+    #         {
+    #             "title": "User Management",
+    #             "separator": True,
+    #             "collapsible": True,
+    #             "items": [
+    #                 {
+    #                     "title": "User Profiles",
+    #                     "icon": "person",
+    #                     "link": "/admin/user_accounts/userprofile/",
+    #                 },
+    #                 {
+    #                     "title": "Teacher Profiles",
+    #                     "icon": "school",
+    #                     "link": "/admin/user_accounts/teacherprofile/",
+    #                 },
+    #                 {
+    #                     "title": "Student Profiles", 
+    #                     "icon": "person_outline",
+    #                     "link": "/admin/user_accounts/studentprofile/",
+    #                 },
+    #                 {
+    #                     "title": "Institution Profiles",
+    #                     "icon": "business",
+    #                     "link": "/admin/user_accounts/institutionprofile/",
+    #                 },
+    #                 {
+    #                     "title": "Subjects",
+    #                     "icon": "book",
+    #                     "link": "/admin/user_accounts/subject/",
+    #                 },
+    #                 {
+    #                     "title": "Add Classes",
+    #                     "icon": "book",
+    #                     "link": "/admin/user_accounts/standards/",
+    #                 },
+    #             ],
+    #         },
+    #         {
+    #             "title": "Content Management",
+    #             "separator": True,
+    #             "collapsible": True,
+    #             "items": [
+    #                 {
+    #                     "title": "Posts",
+    #                     "icon": "article",
+    #                     "link": "/admin/user_dashboard/post/",
+    #                 },
+    #                 {
+    #                     "title": "Ratings",
+    #                     "icon": "star",
+    #                     "link": "/admin/user_dashboard/rating/",
+    #                 },
+    #                 {
+    #                     "title": "Reports",
+    #                     "icon": "report",
+    #                     "link": "/admin/user_dashboard/report/",
+    #                 },
+    #                 {
+    #                     "title": "Unlocked Contacts",
+    #                     "icon": "contact_phone",
+    #                     "link": "/admin/user_dashboard/unlockedcontact/",
+    #                 },
+    #             ],
+    #         },
+    #         {
+    #             "title": "Financial",
+    #             "separator": True,
+    #             "collapsible": True,
+    #             "items": [
+    #                  {
+    #                     "title": "Add Plans",
+    #                     "icon": "money",
+    #                     "link": "/admin/user_dashboard/packageplan/",
+    #                 },
+    #                 {
+    #                     "title": "Wallets",
+    #                     "icon": "account_balance_wallet",
+    #                     "link": "/admin/user_dashboard/wallet/",
+    #                 },
+    #                 {
+    #                     "title": "Transactions",
+    #                     "icon": "receipt",
+    #                     "link": "/admin/user_dashboard/transaction/",
+    #                 },
+    #             ],
+    #         },
+    #         {
+    #             "title": "System",
+    #             "separator": True,
+    #             "collapsible": True,
+    #             "items": [
+    #                 {
+    #                     "title": "Users",
+    #                     "icon": "group",
+    #                     "link": "/admin/auth/user/",
+    #                 },
+    #                 {
+    #                     "title": "Groups",
+    #                     "icon": "group_work",
+    #                     "link": "/admin/auth/group/",
+    #                 },
+    #                 {
+    #                     "title": "Tokens",
+    #                     "icon": "vpn_key",
+    #                     "link": "/admin/authtoken/tokenproxy/",
+    #                 },
+    #             ],
+    #         },
+    #     ],
+    # },
+    # "TABS": [
+    #     {
+    #         "models": [
+    #             "user_accounts.teacherprofile",
+    #             "user_accounts.studentprofile",
+    #             "user_accounts.institutionprofile",
+    #         ],
+    #         "items": [
+    #             {
+    #                 "title": "Teachers",
+    #                 "link": "/admin/user_accounts/teacherprofile/",
+    #                 "permission": lambda request: request.user.has_perm("user_accounts.view_teacherprofile"),
+    #             },
+    #             {
+    #                 "title": "Students", 
+    #                 "link": "/admin/user_accounts/studentprofile/",
+    #                 "permission": lambda request: request.user.has_perm("user_accounts.view_studentprofile"),
+    #             },
+    #             {
+    #                 "title": "Institutions", 
+    #                 "link": "/admin/user_accounts/institutionprofile/",
+    #                 "permission": lambda request: request.user.has_perm("user_accounts.view_institutionprofile"),
+    #             },
+    #         ],
+    #     },
+    # ],
+}
+
+# # Celery Configuration
+# CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
+# CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
+# CELERY_ACCEPT_CONTENT = ['json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_TIMEZONE = TIME_ZONE
+# CELERY_BEAT_SCHEDULE = {
+#     # Add your periodic tasks here
+#     # 'sample-task': {
+#     #     'task': 'your_app.tasks.sample_task',
+#     #     'schedule': 30.0,  # every 30 seconds
+#     # },
+# }
+
+# Email configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  # Your Gmail address
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  if os.getenv('DEBUG') != 'False' else 'testpassword'
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+
+SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
