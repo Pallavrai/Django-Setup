@@ -69,7 +69,7 @@ INSTALLED_APPS = [
     "django_filters",
     "corsheaders",
     "silk",  # Django Silk for profiling
-    
+
     "core_commands",
   
 ]
@@ -219,11 +219,11 @@ STORAGES = {
 
 UNFOLD = {
     
-    "DASHBOARD_CALLBACK": "user_accounts.views.dashboard_callback",
+    # "DASHBOARD_CALLBACK": "user_accounts.views.dashboard_callback",
 
-    "SITE_TITLE": "THT Admin",
-    "SITE_HEADER": "THT Admin",
-    "SITE_SUBHEADER": "Manage your THT application",
+    "SITE_TITLE": "Admin",
+    "SITE_HEADER": "Admin",
+    "SITE_SUBHEADER": "Manage your application",
     "SITE_SYMBOL": "🎓",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,

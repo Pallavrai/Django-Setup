@@ -1,7 +1,7 @@
 services:
   db:
     image: postgis/postgis:16-3.4
-    container_name: postgis_db
+    container_name: ${COMPOSE_PROJECT_NAME:-saferead}_db
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
@@ -18,7 +18,7 @@ services:
   
   redis:
     image: redis:7-alpine
-    container_name: redis_cache
+    container_name: ${COMPOSE_PROJECT_NAME:-saferead}_redis
     ports:
       - "6379:6379"
     volumes:
@@ -33,7 +33,7 @@ services:
 
   app:
     build: .
-    container_name: django_app
+    container_name: ${COMPOSE_PROJECT_NAME:-saferead}_app
     restart: always
     env_file:
       - django.env
@@ -43,10 +43,10 @@ services:
       - .:/app
       - media_data:/app/media
     command: >
-      sh -c "python manage.py makemigrations &&
-             python manage.py migrate &&
-             python manage.py createAdmin &&
-             python manage.py runserver 0.0.0.0:8000"
+      sh -c "uv run python manage.py makemigrations &&
+             uv run python manage.py migrate &&
+             uv run python manage.py createAdmin &&
+             uv run python manage.py runserver 0.0.0.0:8000"
     depends_on:
       redis:
         condition: service_healthy
@@ -55,7 +55,7 @@ services:
 
   nginx:
     image: nginx:1.25-alpine
-    container_name: ngx
+    container_name: ${COMPOSE_PROJECT_NAME:-saferead}_nginx
     ports:
       - "80:80"
     volumes:
@@ -66,7 +66,7 @@ services:
 
   adminer:
     image: adminer:latest
-    container_name: adminer_panel
+    container_name: ${COMPOSE_PROJECT_NAME:-saferead}_adminer
     restart: always
     env_file:
       - django.env
@@ -81,13 +81,13 @@ services:
   
   celery:
     build: .
-    container_name: celery_worker
+    container_name: ${COMPOSE_PROJECT_NAME:-saferead}_celery
     restart: always
     env_file:
       - django.env
     volumes:
       - .:/app
-    command: celery -A config worker --loglevel=info  --pool=prefork --concurrency=8
+    command: uv run celery -A config worker --loglevel=info  --pool=prefork --concurrency=8
     depends_on:
       redis:
         condition: service_healthy
