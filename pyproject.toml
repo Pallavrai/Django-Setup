@@ -1,54 +1,10 @@
+# Django Application Configuration
 [project]
 name = "django-production-boilerplate"
 version = "2.0.0"
 description = "Production-Ready Django Boilerplate with modern tooling, best practices, and easy project customization"
 readme = "README.md"
-license = {text = "MIT"}
-authors = [
-    {name = "Pallav Rai", email = "pallavrai@example.com"}
-]
-maintainers = [
-    {name = "Pallav Rai", email = "pallavrai@example.com"}
-]
-keywords = [
-    "django",
-    "django-rest-framework",
-    "postgresql",
-    "celery",
-    "redis",
-    "boilerplate",
-    "template",
-    "starter",
-    "api",
-    "backend",
-    "postgis",
-    "docker",
-    "production-ready",
-    "modern-django"
-]
-classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Framework :: Django :: 4.2",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
-    "Topic :: Software Development :: Libraries :: Application Frameworks",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-]
 requires-python = ">=3.11"
-
-[project.urls]
-Homepage = "https://github.com/Pallavrai/Django-Setup"
-Repository = "https://github.com/Pallavrai/Django-Setup.git"
-Documentation = "https://github.com/Pallavrai/Django-Setup#readme"
-"Bug Reports" = "https://github.com/Pallavrai/Django-Setup/issues"
-"Source Code" = "https://github.com/Pallavrai/Django-Setup"
-"Celery Branch" = "https://github.com/Pallavrai/Django-Setup/tree/celery%2Bredis"
-
 dependencies = [
     "Django>=4.2",
     "gunicorn>=20.1.0,<21",

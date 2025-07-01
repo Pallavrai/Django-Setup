@@ -20,19 +20,30 @@ if [ -z "$PROJECT_NAME" ] || [ -z "$AUTHOR_NAME" ] || [ -z "$AUTHOR_EMAIL" ]; th
 fi
 
 echo ""
+echo "📝 Installing dependencies..."
+
+# Install dependencies first to ensure Django is available for secret key generation
+if command -v uv >/dev/null 2>&1; then
+    echo "🔄 Running uv sync to install dependencies..."
+    uv sync
+    if [ $? -eq 0 ]; then
+        echo "✅ Dependencies installed successfully"
+    else
+        echo "❌ Failed to install dependencies with uv sync"
+        exit 1
+    fi
+else
+    echo "❌ Error: UV is not installed. Please install UV first: curl -LsSf https://astral.sh/uv/install.sh | sh"
+    exit 1
+fi
+
+echo ""
 echo "📝 Updating project files..."
 
-# Update pyproject.toml
+# Update pyproject.toml (simplified for the new structure)
 if [ -f "pyproject.toml" ]; then
     sed -i.bak "s/name = \"django-production-boilerplate\"/name = \"$PROJECT_NAME\"/" pyproject.toml
     sed -i.bak "s/description = \"Production-Ready Django Boilerplate with modern tooling, best practices, and easy project customization\"/description = \"$PROJECT_DESCRIPTION\"/" pyproject.toml
-    sed -i.bak "s/Pallav Rai/$AUTHOR_NAME/g" pyproject.toml
-    sed -i.bak "s/pallavrai@example.com/$AUTHOR_EMAIL/g" pyproject.toml
-    
-    if [ ! -z "$GITHUB_USERNAME" ]; then
-        sed -i.bak "s|https://github.com/Pallavrai/Django-Setup|https://github.com/$GITHUB_USERNAME/$PROJECT_NAME|g" pyproject.toml
-        sed -i.bak "s/Pallavrai/$GITHUB_USERNAME/g" pyproject.toml
-    fi
     
     echo "✅ Updated pyproject.toml"
 fi
@@ -50,11 +61,16 @@ if [ ! -f "django.env" ] && [ -f "django.env.example" ]; then
     echo "✅ Created django.env from template"
 fi
 
-# Generate Django secret key
-SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-if [ -f "django.env" ]; then
-    sed -i.bak "s/DJANGO_SECRET_KEY=.*/DJANGO_SECRET_KEY='$SECRET_KEY'/" django.env
-    echo "✅ Generated new Django secret key"
+# Generate Django secret key using uv run
+SECRET_KEY=$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+if [ $? -eq 0 ] && [ ! -z "$SECRET_KEY" ]; then
+    if [ -f "django.env" ]; then
+        sed -i.bak "s/DJANGO_SECRET_KEY=.*/DJANGO_SECRET_KEY='$SECRET_KEY'/" django.env
+        echo "✅ Generated new Django secret key"
+    fi
+else
+    echo "❌ Failed to generate Django secret key. Make sure Django is properly installed."
+    exit 1
 fi
 
 # Clean up backup files
@@ -65,11 +81,15 @@ echo "🎉 Setup completed successfully!"
 echo ""
 echo "📋 Next steps:"
 echo "1. Review and update django.env with your database and email settings"
-echo "2. Install dependencies: uv sync"
-echo "3. Create your database: createdb $PROJECT_DB_NAME"
-echo "4. Run migrations: uv run python manage.py migrate"
-echo "5. Create admin user: uv run python manage.py createAdmin"
-echo "6. Start development server: uv run python manage.py runserver"
+echo "2. Create your database: createdb ${PROJECT_DB_NAME:-your_project_db}"
+echo "3. Run migrations: uv run python manage.py migrate"
+echo "4. Create admin user: uv run python manage.py createAdmin"
+echo "5. Start development server: uv run python manage.py runserver"
+echo ""
+echo "💡 Useful commands:"
+echo "   - Activate virtual environment: source .venv/bin/activate"
+echo "   - Run Django commands: uv run python manage.py <command>"
+echo "   - Install new packages: uv add <package-name>"
 echo ""
 echo "🔗 Remember to update the repository URLs if you're using version control!"
 echo ""
