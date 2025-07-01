@@ -479,20 +479,20 @@ UNFOLD = {
     # ],
 }
 
-# # Celery Configuration
-# CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
-# CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
-# CELERY_ACCEPT_CONTENT = ['json']
-# CELERY_TASK_SERIALIZER = 'json'
-# CELERY_RESULT_SERIALIZER = 'json'
-# CELERY_TIMEZONE = TIME_ZONE
-# CELERY_BEAT_SCHEDULE = {
-#     # Add your periodic tasks here
-#     # 'sample-task': {
-#     #     'task': 'your_app.tasks.sample_task',
-#     #     'schedule': 30.0,  # every 30 seconds
-#     # },
-# }
+# Celery Configuration
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULE = {
+    # Add your periodic tasks here
+    # 'sample-task': {
+    #     'task': 'your_app.tasks.sample_task',
+    #     'schedule': 30.0,  # every 30 seconds
+    # },
+}
 
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
