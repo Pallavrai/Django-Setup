@@ -1,0 +1,30 @@
+Django Production Boilerplate
+Copyright (c) 2025 Pallav Rai
+
+This product includes software developed by Pallav Rai.
+Repository: https://github.com/Pallavrai/Django-Setup
+
+This boilerplate was created to provide developers with a production-ready
+Django foundation that includes modern web development tools and best practices.
+
+Third-party software included in this project:
+- Django Framework (BSD License)
+- Django REST Framework (BSD License)
+- PostgreSQL Database (PostgreSQL License)
+- Redis (BSD License)
+- Celery (BSD License)
+- Django Unfold (MIT License)
+- And other dependencies listed in pyproject.toml
+
+For the complete list of dependencies and their licenses, please refer to
+the pyproject.toml file and the individual package documentation.
+
+---
+
+Original Author: Pallav Rai
+Project: SafeRead Backend
+Year: 2025
+License: MIT License (see LICENSE file)
+
+For attribution purposes, please include a reference to the original author
+and project when using this boilerplate in derivative works.
